@@ -10,10 +10,10 @@
 #endif
 #ifdef __MACH__
 #include <sys/event.h>
+#include <sys/time.h>
 #endif
 
 #include <vector>
-
 #define CLEAR   "\e[2J\e[3J\e[H"
 #define BLACK   "\x1B[30;1m"
 #define RED     "\x1B[31;1m"
@@ -54,6 +54,13 @@ class Server
  */
 #ifdef __linux__
 	epoll_event events[MAX_EVENTS];
+#endif
+#ifdef __MACH__
+	int kq;
+	int event_num;
+	timespec timeout;
+	struct kevent change_list;
+	std::vector<struct kevent> event_list;
 #endif
 	public:
 	int listen_socket;

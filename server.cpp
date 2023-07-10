@@ -77,7 +77,10 @@ Server::Server(const char* port)
 		ERROR(__FILE__, __LINE__, __PRETTY_FUNCTION__, "epoll_ctl failed");
 #endif
 #ifdef __MACH__
-		/// kqueue code not implemented yet
+	kq = kqueue();
+	timeout = {5,0};
+	event_list.emplace_back();
+	EV_SET(&change_list,listen_socket,EVFILT_READ,EV_ADD | EV_ENABLE, 0,0,0);
 #endif
 }
 void Server::listen(int queue_size)
@@ -88,13 +91,14 @@ void Server::listen(int queue_size)
 }
 void Server::accept()
 {
+
 #ifdef __linux__
 	epoll_event event = {};
 #endif
 	std::string      user_address = {};
 	sockaddr_storage connection   = {};
 	socklen_t        sin_size     = 0;
-	int              client_fd;
+	int              client_fd = 0;
 
 	sin_size  = sizeof(connection);
 	client_fd = ::accept(listen_socket, reinterpret_cast<sockaddr*>(&connection), &sin_size);
@@ -108,6 +112,10 @@ void Server::accept()
 	ev.data.fd     = client_fd;
 	if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, client_fd, &ev) == -1)
 		ERROR(__FILE__, __LINE__, __PRETTY_FUNCTION__, "epoll_ctl failed");
+#endif
+#ifdef __MACH__
+	EV_SET(&change_list,client_fd,EVFILT_READ,EV_ADD, 0,0,0);
+	kevent(kq,&change_list,1,nullptr,0,&timeout);
 #endif
 }
 
@@ -150,7 +158,61 @@ void Server::run()
 #endif
 
 #ifdef __MACH__
-void Server::run() {}
+void Server::run() {
+
+	listen(20);
+	event_num = kevent(kq, &change_list, 1, nullptr, 0, &timeout);
+	if(event_num == -1)
+		ERROR("kevent");
+	while(true)
+	{
+		event_num = kevent(kq,nullptr,0,event_list.data(),1,&timeout);
+		if(event_num == -1)
+			ERROR("kevent()");
+		for(int i = 0; i < event_num; i++)
+		{
+			auto event_fd = event_list[i].ident;
+			auto flag = event_list[i].flags;
+
+			if(flag & EV_ERROR)
+			{
+				std::cout << "ERROR" << std::endl;
+			}
+			/* client disconnect */
+			if (flag & EV_EOF)
+			{
+				std::cout << "EV_EOF" << std::endl;
+				/* swap to end of vector and pop */
+				std::swap(event_list[i], event_list.back());
+				event_list.pop_back();
+				EV_SET(&change_list, event_fd, EVFILT_READ, EV_DELETE, 0,0,0);
+				close(event_fd);
+			}
+			/* client requesting connection */
+			else if(event_fd == listen_socket)
+			{
+				accept();
+			}
+			/* client sending data */
+			else if(event_list[i].flags & EV_ADD)
+			{
+				char b[] = "HTTP/1.1 200 OK\n"
+				           "Connection: close\n"
+				           "Content-Type:text/html\n"
+				           "Server: Anthony's HTTP server\n"
+				           "Content-Length: 17\n\n"
+				           "<h1>Hello Bitches</h1>";
+
+				char buffer[1024] = {};
+				::recv(event_fd, buffer, sizeof(buffer), 0);
+				std::cout << buffer << std::endl;
+				::send(event_fd, b, sizeof(b), 0);
+
+			}
+
+		}
+	}
+}
 #endif
 Server::~Server()
 {
