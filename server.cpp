@@ -91,10 +91,6 @@ void Server::listen(int queue_size)
 }
 void Server::accept()
 {
-
-#ifdef __linux__
-	epoll_event event = {};
-#endif
 	std::string      user_address = {};
 	sockaddr_storage connection   = {};
 	socklen_t        sin_size     = 0;
