@@ -1,0 +1,27 @@
+---
+AccessModifierOffset: 0
+AlignConsecutiveMacros: true
+AlignConsecutiveAssignments: true
+AlignConsecutiveDeclarations: true
+AlignEscapedNewlines: Left
+AllowShortCaseLabelsOnASingleLine: true
+BreakBeforeBraces: Allman
+BreakConstructorInitializers: BeforeComma
+AllowAllParametersOfDeclarationOnNextLine: true
+AllowAllArgumentsOnNextLine: true
+BinPackArguments: false
+BinPackParameters: false
+AllowAllArgumentsOnNextLine: false
+AlignAfterOpenBracket: BlockIndent
+AlignTrailingComments: true
+ColumnLimit: 100
+IndentWidth: 4
+Language: Cpp
+PointerAlignment: Left
+SortIncludes: true
+SortUsingDeclarations: true
+TabWidth: 4
+UseTab: ForIndentation
+NamespaceIndentation: 'All'
+
+...

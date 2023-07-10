@@ -1,4 +1,21 @@
 # ninja log v5
-1	609	1688941692313235428	CMakeFiles/untitled.dir/main.cpp.o	136c66f3cecbbc81
-1	694	1688941692401235521	CMakeFiles/untitled.dir/server.cpp.o	e6b30b641b635d81
-694	756	1688941692461235585	untitled	92feda28d771507
+0	576	1688958568068729080	CMakeFiles/http_server_3.dir/main.cpp.o	ce6e9a14286bda70
+0	584	1688958568079020488	CMakeFiles/http_server_3.dir/server.cpp.o	6561ce503deba40a
+584	643	1688958568138530156	http_server_3	8cedbdd574d2c279
+4	546	1688958873520636031	CMakeFiles/http_server_3.dir/main.cpp.o	ce6e9a14286bda70
+5	555	1688958873530543418	CMakeFiles/http_server_3.dir/server.cpp.o	6561ce503deba40a
+555	608	1688958873584903736	http_server_3	8cedbdd574d2c279
+5	584	1688959068938779902	CMakeFiles/http_server_3.dir/server.cpp.o	6561ce503deba40a
+584	634	1688959068990798647	http_server_3	8cedbdd574d2c279
+5	543	1688959169364773004	CMakeFiles/http_server_3.dir/main.cpp.o	ce6e9a14286bda70
+5	555	1688959169377878263	CMakeFiles/http_server_3.dir/server.cpp.o	6561ce503deba40a
+555	610	1688959169434024594	http_server_3	8cedbdd574d2c279
+4	356	1688959178850512723	CMakeFiles/http_server_3.dir/main.cpp.o	ce6e9a14286bda70
+4	384	1688959178879238784	CMakeFiles/http_server_3.dir/server.cpp.o	6561ce503deba40a
+384	430	1688959178925817483	http_server_3	8cedbdd574d2c279
+4	542	1688959266837433011	CMakeFiles/http_server_3.dir/main.cpp.o	ce6e9a14286bda70
+5	548	1688959266845998142	CMakeFiles/http_server_3.dir/server.cpp.o	6561ce503deba40a
+548	612	1688959266911026520	http_server_3	8cedbdd574d2c279
+4	484	1688959273261075810	CMakeFiles/http_server_3.dir/main.cpp.o	ce6e9a14286bda70
+5	519	1688959273295829292	CMakeFiles/http_server_3.dir/server.cpp.o	6561ce503deba40a
+519	588	1688959273366790258	http_server_3	8cedbdd574d2c279

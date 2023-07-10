@@ -8,6 +8,10 @@
 #ifdef __linux__
 #include <sys/epoll.h>
 #endif
+#ifdef __MACH__
+#include <sys/event.h>
+#endif
+
 #include <vector>
 
 #define CLEAR   "\e[2J\e[3J\e[H"
@@ -21,43 +25,41 @@
 #define WHITE   "\x1B[37;1m"
 #define RESET   "\x1B[0m"
 
-#define B_BLACK    "\x1B[40;1m"
-#define B_RED      "\x1B[41;1m"
-#define B_GREEN    "\x1B[42;1m"
-#define B_YELLOW   "\x1B[43;1m"
-#define B_BLUE     "\x1B[44;1m"
-#define B_MAGENTA  "\x1B[45;1m"
-#define B_CYAN     "\x1B[46;1m"
-#define B_WHITE    "\x1B[47;1m"
-
+#define B_BLACK   "\x1B[40;1m"
+#define B_RED     "\x1B[41;1m"
+#define B_GREEN   "\x1B[42;1m"
+#define B_YELLOW  "\x1B[43;1m"
+#define B_BLUE    "\x1B[44;1m"
+#define B_MAGENTA "\x1B[45;1m"
+#define B_CYAN    "\x1B[46;1m"
+#define B_WHITE   "\x1B[47;1m"
 
 #define MAX_EVENTS 100
 
-
-#define ERROR(file, line, function, msg)                                                       \
+#define ERROR(msg)                                                                             \
 	{                                                                                          \
-		std::cout << B_RED << WHITE << file << ":" << line << RESET << ":" << function << ": " \
-		          << RED << "error: " << RESET << strerror(errno) << std::endl;                \
+		std::cout << B_RED << WHITE << __FILE__ << ":" << __LINE__ << RESET << ":"             \
+		          << __PRETTY_FUNCTION__ << ":" << RED << "errno:" << RESET << strerror(errno) \
+		          << ":" << RED << msg << RESET << std::endl;                                  \
 		std::exit(EXIT_FAILURE);                                                               \
 	}
 class Server
 {
-private:
-	int epoll_fd;
+	private:
+	int  epoll_fd;
 	void listen(int queue_size);
 	void accept();
 /*
  *  https://suchprogramming.com/epoll-in-3-easy-steps/
  */
 #ifdef __linux__
-    epoll_event events[MAX_EVENTS];
+	epoll_event events[MAX_EVENTS];
 #endif
-public:
-    int listen_socket;
-    Server(const char* port);
-    ~Server();
-    void run();
-
+	public:
+	int listen_socket;
+	explicit Server(const char* port);
+	~Server();
+	void run();
 };
 
-#endif //UNTITLED_SERVER_H
+#endif // UNTITLED_SERVER_H

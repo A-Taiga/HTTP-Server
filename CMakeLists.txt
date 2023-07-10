@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.25)
-project(untitled)
+project(http_server_3)
 
 set(CMAKE_CXX_STANDARD 23)
 
-add_executable(untitled main.cpp server.h server.cpp)
+add_executable(http_server_3 main.cpp server.cpp)
