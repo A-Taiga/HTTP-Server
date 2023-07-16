@@ -14,6 +14,7 @@
 #endif
 
 #include <vector>
+#include "cache.cpp"
 #define CLEAR   "\e[2J\e[3J\e[H"
 #define BLACK   "\x1B[30;1m"
 #define RED     "\x1B[31;1m"
@@ -46,6 +47,7 @@
 class Server
 {
 	private:
+	LRU<10> c;
 	int  epoll_fd;
 	void listen(int queue_size);
 	void accept();

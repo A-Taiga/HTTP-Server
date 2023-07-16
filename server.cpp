@@ -9,6 +9,63 @@
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <unistd.h>
+#include <string>
+
+#define HTMLPATH "/Users/anthony/Desktop/http-server-3/index.html"
+#define CSSPATH "/Users/anthony/Desktop/http-server-3/style.css"
+
+template<std::size_t Size>
+std::string parseRequest(std::string& hdr, LRU<Size>& c)
+{
+
+	int get = hdr.find_first_of('\n');
+	std::string fileName = hdr.substr(hdr.find_first_of(' '),get-hdr.find_first_of(' '));
+	fileName = fileName.substr(fileName.find_first_of(' ')+1,fileName.find_last_of(' ')-1);
+
+	const char accept[] 		= "Accept:";
+	std::string requestedFile	= {};
+	std::string response		= {"HTTP/1.1 200\n"};
+
+	/* file type */
+	int fTypeStart 	= hdr.find("Accept:")+sizeof(accept);
+	int fTypeEnd 	= hdr.find_first_of(',',fTypeStart);
+	auto fileType 	= hdr.substr(fTypeStart,fTypeEnd-fTypeStart);
+
+
+	/* connection type */
+	int cTypeStart 		= hdr.find("Connection:");
+	int cTypeEnd 		= hdr.find_first_of('\n',cTypeStart);
+	auto connectionType = hdr.substr(cTypeStart,cTypeEnd-cTypeStart);
+
+
+
+	if(fileType.find("text/html") != fileType.npos)
+	{
+		requestedFile	= c.cache(HTMLPATH);
+		response 		+= "Content-Type: text/html\n";
+		response 		+= "Content-Length: ";
+		response 		+= std::to_string(requestedFile.size()) + "\n\n";
+		response 		+= requestedFile;
+	}
+	else if(fileType.find("text/css") != fileType.npos)
+	{
+		requestedFile 	= c.cache(fileName);
+		response 		+= "Content-Type: text/css\n";
+		response 		+= "Content-Length: ";
+		response 		+= std::to_string(requestedFile.size()) + "\n\n";
+		response 		+= requestedFile;
+	}
+	else
+	{
+		return  "HTTP/1.1 400";
+	}
+
+	return response;
+}
+
+
+
+
 
 void* get_in_addr(sockaddr* sa)
 {
@@ -157,6 +214,7 @@ void Server::run()
 void Server::run() {
 
 	listen(20);
+	/* figure out why i have to do this here and then down below */
 	event_num = kevent(kq, &change_list, 1, nullptr, 0, &timeout);
 	if(event_num == -1)
 		ERROR("kevent");
@@ -192,20 +250,17 @@ void Server::run() {
 			/* client sending data */
 			else if(event_list[i].flags & EV_ADD)
 			{
-				char b[] = "HTTP/1.1 200 OK\n"
-				           "Connection: close\n"
-				           "Content-Type:text/html\n"
-				           "Server: Anthony's HTTP server\n"
-				           "Content-Length: 17\n\n"
-				           "<h1>Hello Bitches</h1>";
-
-				char buffer[1024] = {};
-				::recv(event_fd, buffer, sizeof(buffer), 0);
+				std::string buffer(1024,'\0');
+				::recv((int)event_fd, buffer.data(), buffer.size(), 0);
 				std::cout << buffer << std::endl;
-				::send(event_fd, b, sizeof(b), 0);
 
+
+				std::string response = parseRequest(buffer,c);
+				std::cout << "================" << std::endl;
+				std::cout << response << std::endl;
+
+				::send((int)event_fd, response.data(), response.size(), 0);
 			}
-
 		}
 	}
 }
