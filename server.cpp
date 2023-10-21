@@ -124,7 +124,7 @@ Server::Server(const char* port)
 #ifdef __linux__
 	epoll_fd = epoll_create1(0);
 	if (epoll_fd == -1)
-		ERROR(__FILE__, __LINE__, __PRETTY_FUNCTION__, "epoll_creat1 failed");
+		ERROR("epoll_creat1 failed");
 
 	epoll_event ev = {};
 	ev.events      = EPOLLIN;
