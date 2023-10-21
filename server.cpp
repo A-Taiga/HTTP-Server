@@ -131,7 +131,7 @@ Server::Server(const char* port)
 	ev.data.fd     = listen_socket;
 	s              = epoll_ctl(epoll_fd, EPOLL_CTL_ADD, listen_socket, &ev);
 	if (s == -1)
-		ERROR(__FILE__, __LINE__, __PRETTY_FUNCTION__, "epoll_ctl failed");
+		ERROR("epoll_ctl failed");
 #endif
 #ifdef __MACH__
 	kq = kqueue();
@@ -164,7 +164,7 @@ void Server::accept()
 	ev.events      = EPOLLIN;
 	ev.data.fd     = client_fd;
 	if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, client_fd, &ev) == -1)
-		ERROR(__FILE__, __LINE__, __PRETTY_FUNCTION__, "epoll_ctl failed");
+		ERROR("epoll_ctl failed");
 #endif
 #ifdef __MACH__
 	EV_SET(&change_list,client_fd,EVFILT_READ,EV_ADD, 0,0,0);
