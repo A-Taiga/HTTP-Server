@@ -49,7 +49,7 @@ class Server
 	private:
 	LRU<10> c;
 	int  epoll_fd;
-	void listen(int queue_size);
+	void listen(int queue_size) const;
 	void accept();
 /*
  *  https://suchprogramming.com/epoll-in-3-easy-steps/

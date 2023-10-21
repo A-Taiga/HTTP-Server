@@ -18,7 +18,7 @@ template<std::size_t Size>
 std::string parseRequest(std::string& hdr, LRU<Size>& c)
 {
 
-	int get = hdr.find_first_of('\n');
+	unsigned long get = hdr.find_first_of('\n');
 	std::string fileName = hdr.substr(hdr.find_first_of(' '),get-hdr.find_first_of(' '));
 	fileName = fileName.substr(fileName.find_first_of(' ')+1,fileName.find_last_of(' ')-1);
 
@@ -27,19 +27,19 @@ std::string parseRequest(std::string& hdr, LRU<Size>& c)
 	std::string response		= {"HTTP/1.1 200\n"};
 
 	/* file type */
-	int fTypeStart 	= hdr.find("Accept:")+sizeof(accept);
-	int fTypeEnd 	= hdr.find_first_of(',',fTypeStart);
-	auto fileType 	= hdr.substr(fTypeStart,fTypeEnd-fTypeStart);
+	unsigned long fTypeStart 	= hdr.find("Accept:")+sizeof(accept);
+	unsigned long fTypeEnd 		= hdr.find_first_of(',',fTypeStart);
+	auto fileType 		= hdr.substr(fTypeStart,fTypeEnd-fTypeStart);
 
 
 	/* connection type */
-	int cTypeStart 		= hdr.find("Connection:");
-	int cTypeEnd 		= hdr.find_first_of('\n',cTypeStart);
-	auto connectionType = hdr.substr(cTypeStart,cTypeEnd-cTypeStart);
+	unsigned long cTypeStart 	= hdr.find("Connection:");
+	unsigned long cTypeEnd 		= hdr.find_first_of('\n',cTypeStart);
+	auto connectionType 	= hdr.substr(cTypeStart,cTypeEnd-cTypeStart);
 
 
 
-	if(fileType.find("text/html") != fileType.npos)
+	if(fileType.find("text/html") != std::string::npos)
 	{
 		requestedFile	= c.cache(HTMLPATH);
 		response 		+= "Content-Type: text/html\n";
@@ -47,7 +47,7 @@ std::string parseRequest(std::string& hdr, LRU<Size>& c)
 		response 		+= std::to_string(requestedFile.size()) + "\n\n";
 		response 		+= requestedFile;
 	}
-	else if(fileType.find("text/css") != fileType.npos)
+	else if(fileType.find("text/css") != std::string::npos)
 	{
 		requestedFile 	= c.cache(fileName);
 		response 		+= "Content-Type: text/css\n";
@@ -62,10 +62,6 @@ std::string parseRequest(std::string& hdr, LRU<Size>& c)
 
 	return response;
 }
-
-
-
-
 
 void* get_in_addr(sockaddr* sa)
 {
@@ -86,11 +82,15 @@ std::string get_user_address(sockaddr_storage& client)
 	return address;
 }
 Server::Server(const char* port)
+: epoll_fd(0)
+, event_num(0)
+, timeout{}
+, change_list{}
 {
-	int       s, status;
+	int       status;
 	const int option      = 1;
-	addrinfo* temp_info   = {nullptr};
-	addrinfo* server_info = {nullptr};
+	addrinfo* temp_info   = {};
+	addrinfo* server_info = {};
 	addrinfo  hints       = {};
 
 	hints.ai_family   = AF_UNSPEC;
@@ -106,9 +106,9 @@ Server::Server(const char* port)
 		listen_socket =
 		    socket(server_info->ai_family, server_info->ai_socktype, server_info->ai_protocol);
 		if (listen_socket == -1)
-			ERROR("socket()");
+			ERROR("socket()")
 		if (setsockopt(listen_socket, SOL_SOCKET, SO_REUSEADDR, &option, sizeof(option)) == -1)
-			ERROR("setsockopt()");
+			ERROR("setsockopt()")
 		if (bind(listen_socket, server_info->ai_addr, server_info->ai_addrlen) == -1)
 		{
 			close(listen_socket);
@@ -119,7 +119,7 @@ Server::Server(const char* port)
 	}
 	freeaddrinfo(temp_info);
 	if (server_info == nullptr)
-		ERROR("failed to bind");
+		ERROR("failed to bind")
 
 #ifdef __linux__
 	epoll_fd = epoll_create1(0);
@@ -140,24 +140,24 @@ Server::Server(const char* port)
 	EV_SET(&change_list,listen_socket,EVFILT_READ,EV_ADD | EV_ENABLE, 0,0,0);
 #endif
 }
-void Server::listen(int queue_size)
+void Server::listen(int queue_size) const
 {
 	std::cout << GREEN << "server started" RESET << std::endl;
 	if (::listen(listen_socket, queue_size) == -1)
-		ERROR("listen()");
+		ERROR("listen()")
 }
 void Server::accept()
 {
-	std::string      user_address = {};
-	sockaddr_storage connection   = {};
-	socklen_t        sin_size     = 0;
-	int              client_fd = 0;
+	std::string      user_address 	= {};
+	sockaddr_storage connection   	= {};
+	socklen_t        sin_size     	= 0;
+	int              client_fd;
 
 	sin_size  = sizeof(connection);
 	client_fd = ::accept(listen_socket, reinterpret_cast<sockaddr*>(&connection), &sin_size);
 	if (client_fd == -1)
-		ERROR("accept()");
-	user_address = get_user_address(connection);
+		ERROR("accept()")
+//	user_address = get_user_address(connection);
 
 #ifdef __linux__
 	epoll_event ev = {};
@@ -217,16 +217,16 @@ void Server::run() {
 	/* figure out why i have to do this here and then down below */
 	event_num = kevent(kq, &change_list, 1, nullptr, 0, &timeout);
 	if(event_num == -1)
-		ERROR("kevent");
+		ERROR("kevent")
 	while(true)
 	{
 		event_num = kevent(kq,nullptr,0,event_list.data(),1,&timeout);
 		if(event_num == -1)
-			ERROR("kevent()");
+			ERROR("kevent()")
 		for(int i = 0; i < event_num; i++)
 		{
-			auto event_fd = event_list[i].ident;
-			auto flag = event_list[i].flags;
+			uintptr_t event_fd 	= event_list[i].ident;
+			uint16_t flag 		= event_list[i].flags;
 
 			if(flag & EV_ERROR)
 			{
@@ -240,7 +240,7 @@ void Server::run() {
 				std::swap(event_list[i], event_list.back());
 				event_list.pop_back();
 				EV_SET(&change_list, event_fd, EVFILT_READ, EV_DELETE, 0,0,0);
-				close(event_fd);
+				close((int)event_fd);
 			}
 			/* client requesting connection */
 			else if(event_fd == listen_socket)
